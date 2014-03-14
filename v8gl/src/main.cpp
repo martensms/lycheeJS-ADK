@@ -6,6 +6,7 @@
 #include "v8gl.h"
 #include "./lib/fs.h"
 
+#include "./binding/glut.h"
 
 
 int main(int argc, char* argv[]) {
@@ -24,6 +25,7 @@ int main(int argc, char* argv[]) {
 
 
 		v8gl::V8GL::dispatch(context);
+		v8gl::V8GL::execute(context, v8::String::New("glut.init(argc, argv);"), v8::String::New("@runtime"));
 
 
 		char* rawsource = lib::FS::read(main_file);
@@ -37,6 +39,13 @@ int main(int argc, char* argv[]) {
 
 
 		v8gl::V8GL::execute(context, v8::String::New("if(typeof main !== 'undefined') main(argc, argv);"), v8::String::New("@runtime"));
+		v8gl::V8GL::execute(context, v8::String::New("glut.mainLoop();"), v8::String::New("@runtime"));
+
+
+		context.Dispose();
+
+		return 0;
+
 
 	} else {
 		fprintf(stderr, "\nERROR: No ./main.js file found.\n");
@@ -45,14 +54,6 @@ int main(int argc, char* argv[]) {
 
 
 /*
-	v8::HandleScope scope;
-	v8::Persistent<v8::Context> context = v8gl::V8GL::initialize(&argc, argv);
-
-
-	lib::FS::setVMRoot((char*) root_prog, (char*) root_file);
-
-
-	v8gl::V8GL::dispatch(context, (char*) "lycheeJS");
 
 	v8gl::V8GL::execute(context, v8::String::New("glut.init()"), v8::String::New("@built-in/main.js"));
 	v8gl::V8GL::execute(context, v8::String::New("glut.createWindow(\"V8GL runtime\");"), v8::String::New("@built-in/main.js"));

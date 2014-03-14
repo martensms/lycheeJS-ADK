@@ -8,19 +8,13 @@ MODES = release debug
 ANDROID_BUILDS = $(foreach mode,$(MODES), \
                    $(addsuffix .$(mode),$(ANDROID_ARCHES)))
 
-HOST_OS = $(shell uname -s | sed -e 's/Linux/linux/;s/Darwin/mac/')
+HOST_OS = $(shell uname -s | sed -e 's/Linux/linux/')
 ifeq ($(HOST_OS), linux)
   TOOLCHAIN_DIR = linux-x86
-else
-  ifeq ($(HOST_OS), mac)
-    TOOLCHAIN_DIR = darwin-x86
-  else
-    $(error Host platform "${HOST_OS}" is not supported)
-  endif
 endif
 
 
-CFLAGS = -Wall -D__V8GL__ -D__ANDROID__
+CFLAGS = -D__V8GL__ -D__ANDROID__
 
 STATIC_INCLUDES = -I../external/libpng/include \
 	-I../external/v8/include
@@ -54,8 +48,6 @@ else
 endif
 
 
-
-
 TOOLCHAIN_PATH = ${ANDROID_NDK_ROOT}/toolchains/${TOOLCHAIN_ARCH}/prebuilt
 ANDROID_TOOLCHAIN ?= ${TOOLCHAIN_PATH}/${TOOLCHAIN_DIR}
 ifeq ($(wildcard $(ANDROID_TOOLCHAIN)),)
@@ -63,13 +55,22 @@ ifeq ($(wildcard $(ANDROID_TOOLCHAIN)),)
 endif
 
 
+LDFLAGS = $(STATIC_LIBRARIES) $(SHARED_LIBRARIES)
+
+
+#
+# V8GL game runtime (Android build)
+#
+
 AR=$(ANDROID_TOOLCHAIN)/bin/*-ar
 RANLIB=$(ANDROID_TOOLCHAIN)/bin/*-ranlib
 CC=$(ANDROID_TOOLCHAIN)/bin/*-g++
 
-
-HEADERS = src/v8gl.h \
+HEADER_FILES = src/v8gl.h \
 	src/binding/gles.h \
+	src/binding/webgl.h \
+	src/binding/glu.h \
+	src/binding/glut.h \
 	src/lib/fs.h \
 	src/lib/os.h \
 	src/api/arraybuffer.h \
@@ -78,37 +79,45 @@ HEADERS = src/v8gl.h \
 	src/api/text.h \
 	src/api/texture.h
 
-OBJECTS = $(OUTDIR)/v8gl.o \
-	$(OUTDIR)/binding_gles.o \
-	$(OUTDIR)/lib_fs.o \
-	$(OUTDIR)/lib_os.o \
-	$(OUTDIR)/api_arraybuffer.o \
-	$(OUTDIR)/api_navigator.o \
-	$(OUTDIR)/api_script.o \
-	$(OUTDIR)/api_text.o \
-	$(OUTDIR)/api_texture.o
+
+SRC_FILES = src/v8gl.cpp \
+	src/binding/gles.cpp \
+	src/binding/webgl.cpp \
+	src/binding/glu.cpp \
+	src/binding/glut.cpp \
+	src/lib/fs.cpp \
+	src/lib/os.cpp \
+	src/api/arraybuffer.cpp \
+	src/api/navigator.cpp \
+	src/api/script.cpp \
+	src/api/text.cpp \
+	src/api/texture.cpp
 
 
-CFLAGS += $(STATIC_INCLUDES)
-LDFLAGS = $(SHARED_LIBRARIES)
+debug: $(HEADER_FILES)
 
-# TODO: Evaluate: This is maybe unnecessary
-LDFLAGS_A = $(STATIC_LIBRARIES) $(SHARED_LIBRARIES)
 
-debug: $(HEADERS)
-
-release: $(HEADERS)
+release: $(HEADER_FILES)
 	rm -rf $(OUTDIR)
-	mkdir $(OUTDIR)
-	$(CC) $(CFLAGS) -c -o $(OUTDIR)/v8gl.o src/v8gl.cpp $(LDFLAGS)
-	$(CC) $(CFLAGS) -c -o $(OUTDIR)/binding_gles.o src/binding/gles.cpp $(LDFLAGS)
-	$(CC) $(CFLAGS) -c -o $(OUTDIR)/lib_fs.o src/lib/fs.cpp $(LDFLAGS)
-	$(CC) $(CFLAGS) -c -o $(OUTDIR)/lib_os.o src/lib/os.cpp $(LDFLAGS)
-	$(CC) $(CFLAGS) -c -o $(OUTDIR)/api_arraybuffer.o src/api/arraybuffer.cpp $(LDFLAGS)
-	$(CC) $(CFLAGS) -c -o $(OUTDIR)/api_navigator.o src/api/navigator.cpp $(LDFLAGS)
-	$(CC) $(CFLAGS) -c -o $(OUTDIR)/api_script.o src/api/script.cpp $(LDFLAGS)
-	$(CC) $(CFLAGS) -c -o $(OUTDIR)/api_text.o src/api/text.cpp $(LDFLAGS)
-	$(CC) $(CFLAGS) -c -o $(OUTDIR)/api_texture.o src/api/texture.cpp $(LDFLAGS)
-	$(AR) rc $(OUTDIR)/libv8gl.a $(OBJECTS)
+	mkdir -p $(OUTDIR)
+	$(CC) -Wall $(CFLAGS) $(STATIC_INCLUDES) src/v8gl.cpp -c -o $(OUTDIR)/v8gl.o
+	$(CC) -Wall $(CFLAGS) $(STATIC_INCLUDES) src/binding/gles.cpp -c -o $(OUTDIR)/binding_gles.o
+	$(CC) -Wall $(CFLAGS) $(STATIC_INCLUDES) src/binding/webgl.cpp -c -o $(OUTDIR)/binding_webgl.o
+	$(CC) -Wall $(CFLAGS) $(STATIC_INCLUDES) src/binding/glu.cpp -c -o $(OUTDIR)/binding_glu.o
+	$(CC) -Wall $(CFLAGS) $(STATIC_INCLUDES) src/binding/glut.cpp -c -o $(OUTDIR)/binding_glut.o
+	$(CC) -Wall $(CFLAGS) $(STATIC_INCLUDES) src/lib/fs.cpp -c -o $(OUTDIR)/lib_fs.o
+	$(CC) -Wall $(CFLAGS) $(STATIC_INCLUDES) src/lib/os.cpp -c -o $(OUTDIR)/lib_os.o
+	$(CC) -Wall $(CFLAGS) $(STATIC_INCLUDES) src/api/arraybuffer.cpp -c -o $(OUTDIR)/api_arraybuffer.o
+	$(CC) -Wall $(CFLAGS) $(STATIC_INCLUDES) src/api/navigator.cpp -c -o $(OUTDIR)/api_navigator.o
+	$(CC) -Wall $(CFLAGS) $(STATIC_INCLUDES) src/api/script.cpp -c -o $(OUTDIR)/api_script.o
+	$(CC) -Wall $(CFLAGS) $(STATIC_INCLUDES) src/api/text.cpp -c -o $(OUTDIR)/api_text.o
+	$(CC) -Wall $(CFLAGS) $(STATIC_INCLUDES) src/api/texture.cpp -c -o $(OUTDIR)/api_texture.o
+	$(AR) rc $(OUTDIR)/libv8gl.a $(OUTDIR)/v8gl.o \
+	$(OUTDIR)/binding_gles.o $(OUTDIR)/binding_webgl.o \
+	$(OUTDIR)/binding_glu.o $(OUTDIR)/binding_glut.o \
+	$(OUTDIR)/lib_fs.o $(OUTDIR)/lib_os.o \
+	$(OUTDIR)/api_arraybuffer.o \
+	$(OUTDIR)/api_navigator.o $(OUTDIR)/api_script.o \
+	$(OUTDIR)/api_text.o $(OUTDIR)/api_texture.o
 	$(RANLIB) $(OUTDIR)/libv8gl.a
  

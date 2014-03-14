@@ -12,12 +12,6 @@ allows cross-compiling your JavaScript Games to different
 platforms via native executables or packages.
 
 
-# Roadmap
-
-Please take a look at the [lycheeJS Roadmap](https://github.com/martensms/lycheeJS#roadmap)
-that also contains the roadmap of the lycheeJS ADK.
-
-
 # License
 
 The lycheeJS-ADK is released under MIT license.
@@ -25,7 +19,7 @@ The lycheeJS-ADK is released under MIT license.
 
 # Development Environment
 
-The recommended development environment is [Ubuntu 12.04 64Bit](http://ubuntu.com/download)
+The recommended development environment is [Ubuntu 12.10 64Bit](http://ubuntu.com/download)
 with an underlying machine setup:
 
 - CPU supports either the complete amd64 or the intel64 (IA-32e, EM64T) instruction set.
@@ -38,11 +32,9 @@ The installed OpenGL version should be higher than 2.1. You can verify the OpenG
 string of your graphics card by executing the following line in your shell:
 
 ```bash
-
 $ glxinfo | grep "OpenGL version"
 
 OpenGL version string: 4.2.11627 Compatibility Profile Context
-
 ```
 
 
@@ -62,27 +54,32 @@ git clone git://github.com/martensms/lycheeJS-adk.git ~/Desktop/lycheeJS-adk;
 
 **Method 2: Downloading via zip file**
 
-[Download the zip file](https://github.com/martensms/lycheeJS-adk/zipball/master)
+[Download the zip file](https://github.com/martensms/lycheeJS-adk/archive/master.zip)
 and unpack the contents inside the zip files' root folder it to your *~/Desktop/lycheeJS-adk* folder.
 
-(So that the adk script is located at *~/Desktop/lycheeJS-adk/adk*)
+(So that the setup.sh script is located at *~/Desktop/lycheeJS-adk/setup.sh*)
 
 
 ## Step 2: Setup
 
 After you have plain installation of the lycheeJS ADK, you need to
 setup your environment and install the dependend libararies, development
-headers and such.
-
-The setup process will require either *apt-get* or *aptitude* being
-installed on your system. If you choose to install lycheeJS via git, you
-will also need to manually install git via *sudo aptitude install git*.
+headers and such. The setup script will also build the ADK itself (which
+is in fact a V8GL runtime for your machine's architecture).
 
 ```bash
-	cd ~/Desktop/lycheeJS-adk;
-	./setup.sh;
-	chmod +x ./adk; # in case you downloaded the zip file.
-	./adk setup
+cd ~/Desktop/lycheeJS-adk;
+chmod +x ./setup.sh; # In case you downloaded the zip file
+./setup.sh;
+```
+
+
+## Step 3: Game Engine-specific Bootstrapping
+
+
+```bash
+cd ~/Desktop/lycheeJS-adk;
+./adk bootstrap --adapter=lycheeJS
 ```
 
 
@@ -96,27 +93,14 @@ building all required V8 libraries and snapshots.
 A simple start point of learning how to develop games with lycheeJS is
 to try out the code of the Boilerplate or the Jewelz Game.
 
-So, you can build the Jewelz Game via:
-
 ```bash
-	cd ~/Desktop/lycheeJS-adk;
-	./adk clean && ./adk build linux ./external/lycheeJS/game/jewelz
+cd ~/Desktop/lycheeJS-adk;
+./adk build linux.x64 ./external/lycheeJS/game/jewelz --adapter=lycheeJS
+
+# Testing
+cd ./out/Linux.x64;
+./v8gl;
 ```
 
-**Debug Builds**
-
-If you want to create debug builds, just edit the *init.js* of your
-game and uncomment the ```lychee.debug = true``` line.
-The V8GL runtime will be build in debug mode.
-
-
-## Step 4: Testing
-
-After you followed the instructions of **Step 3** you can now test the
-build via:
-
-```bash
-	cd ~/Desktop/lycheeJS-adk;
-	./out/linux/start.sh
-```
+For a 32 Bit system, you should build *linux.ia32* instead.
 

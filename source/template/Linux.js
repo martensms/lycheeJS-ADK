@@ -13,13 +13,47 @@
 
 	adk.template.Linux.prototype = {
 
-		build: function() {
+		getEnvironment: function(env, indir, outdir) {
+			return env;
 		},
 
-		clean: function() {
+		build: function(arch, indir, outdir) {
+
+			console.group('adk.template.Linux.prototype.build(' + arch + ', ' + indir + ', ' + outdir + ')');
+
+			var builder = this.__main.getBuilder();
+
+			builder.buildV8GL(arch, outdir + '/v8gl', false);
+
+			console.groupEnd();
+
 		},
 
-		debug: function() {
+		clean: function(arch, indir, outdir) {
+
+		},
+
+		debug: function(arch, indir, outdir) {
+
+			console.log('DEBUGGING...');
+
+			var valgrindlog = this.__main.getRoot() + '/' + this.__main.getTemporaryFolder() + '/valgrind.log';
+
+			var args = [
+				'G_SLICE=always-malloc',
+				'G_DEBUG=gc-friendly',
+				'valgrind -v',
+				'--tool=memcheck',
+				'--leak-check=full',
+				'--num-callers=40',
+				'--log-file=' + valgrindlog,
+				'$(which ./v8gl)'
+			];
+
+
+			var cmd = 'cd ' + folder + ' && ' + args.join(' ') + ';';
+			shell.exec(cmd);
+
 		}
 
 	};

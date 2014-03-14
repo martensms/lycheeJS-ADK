@@ -51,10 +51,14 @@
 
 			space = this.__getWhitespace('Usage:', this.__whitespace + 'Example:'.length);
 			str += 'Usage:' + space + self + ' <task> <template [.<architecture>]> <game-folder> [--<flag>=value]\n';
+			str += '\n';
 
 			space = this.__getWhitespace('Example:', this.__whitespace + 'Example:'.length);
-			str += 'Example:' + space + self + ' build android.arm ./external/lycheeJS/game/boilerplate --adapter=lycheeJS\n';
+			str += 'Example:' + space + self + ' bootstrap --adapter=lycheeJS\n';
 
+
+			space = this.__getWhitespace('', this.__whitespace + 'Example:'.length);
+			str += space + self + ' build android.arm ./external/lycheeJS/game/boilerplate --adapter=lycheeJS\n';
 
 			space = this.__getWhitespace('', 'Example:'.length);
 

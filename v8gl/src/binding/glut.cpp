@@ -15,6 +15,7 @@
  *
  * MISSING bindings (due to cross-platform conflictions):
  *
+ *
  * - 4. from Window Management:
  *   > glut.setCursor
  *
@@ -48,37 +49,61 @@ namespace binding {
 	 * Initialization
 	 */
 
-	bool _glut_mainLoop = false;
+	v8::Handle<v8::Value> GLUT::handleInit(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
+
+		if (
+			args.Length() == 2
+			&& args[0]->IsNumber()
+			&& args[1]->IsArray()
+		) {
+
+			int argc = args[0]->IntegerValue();
+			v8::Local<v8::Object> arr_argv = args[1]->ToObject();
+
+
+			char* argv[argc];
+
+			const v8::Local<v8::Array> props = arr_argv->GetPropertyNames();
+			const uint32_t length = props->Length();
+
+			for (uint32_t a = 0; a < length; a++) {
+
+				v8::Local<v8::Value> key = props->Get(a);
+				v8::String::Utf8Value value(arr_argv->Get(key));
+
+				argv[a] = *value;
+
+			}
+
+			glutInit(&argc, argv);
+
+		}
+
+		return scope.Close(v8::Undefined());
+
+	}
 
 	v8::Handle<v8::Value> GLUT::handleMainLoop(const v8::Arguments& args) {
 
-		if (_glut_mainLoop == false) {
-			glutMainLoop();
-			_glut_mainLoop = true;
-		}
+		v8::HandleScope scope;
 
-		return v8::Undefined();
+		glutMainLoop();
+
+		return scope.Close(v8::Undefined());
 
 	}
-
-	bool _glut_init = false;
-	int* _glut_pargc;
-	char** _glut_argv;
-
-	v8::Handle<v8::Value> GLUT::handleInit(const v8::Arguments& args) {
-
-		if (_glut_init == false) {
-			glutInit((int*) _glut_pargc, (char**) _glut_argv);
-			_glut_init = true;
-		}
-
-		return v8::Undefined();
-	}
-
 
 	v8::Handle<v8::Value> GLUT::handleInitWindowPosition(const v8::Arguments& args) {
 
-		if (args.Length() == 2) {
+		v8::HandleScope scope;
+
+		if (
+			args.Length() == 2
+			&& args[0]->IsNumber()
+			&& args[1]->IsNumber()
+		) {
 
 			int posx = args[0]->IntegerValue();
 			int posy = args[1]->IntegerValue();
@@ -87,13 +112,19 @@ namespace binding {
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
  
 	v8::Handle<v8::Value> GLUT::handleInitWindowSize(const v8::Arguments& args) {
 
-		if (args.Length() == 2) {
+		v8::HandleScope scope;
+
+		if (
+			args.Length() == 2
+			&& args[0]->IsNumber()
+			&& args[1]->IsNumber()
+		) {
 
 			int width = args[0]->IntegerValue();
 			int height = args[1]->IntegerValue();
@@ -102,21 +133,25 @@ namespace binding {
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
 
 	v8::Handle<v8::Value> GLUT::handleInitDisplayMode(const v8::Arguments& args) {
 
-		if (args.Length() == 1) {
+		v8::HandleScope scope;
+
+		if (
+			args.Length() == 1
+			&& args[0]->IsNumber()
+		) {
 
 			unsigned int mode = args[0]->Uint32Value();
-
 			glutInitDisplayMode((unsigned int) mode);
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
  
@@ -129,7 +164,16 @@ namespace binding {
 
 	v8::Handle<v8::Value> GLUT::handleCreateSubWindow(const v8::Arguments& args) {
 
-		if (args.Length() == 5) {
+		v8::HandleScope scope;
+
+		if (
+			args.Length() == 5
+			&& args[0]->IsNumber()
+			&& args[1]->IsNumber()
+			&& args[2]->IsNumber()
+			&& args[3]->IsNumber()
+			&& args[4]->IsNumber()
+		) {
 
 			int win    = args[0]->Uint32Value();
 			int posx   = args[1]->Uint32Value();
@@ -143,59 +187,85 @@ namespace binding {
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
 
 	v8::Handle<v8::Value> GLUT::handleGetWindow(const v8::Arguments& args) {
 
+		v8::HandleScope scope;
+
 		int id = glutGetWindow();
 
-		return v8::Uint32::New(id);
+		return scope.Close(v8::Uint32::New(id));
 
 	}
 
 	v8::Handle<v8::Value> GLUT::handleSetWindow(const v8::Arguments& args) {
 
-		if (args.Length() == 1) {
+		v8::HandleScope scope;
+
+		if (
+			args.Length() == 1
+			&& args[0]->IsNumber()
+		) {
 
 			int win = args[0]->IntegerValue();
-
 			glutSetWindow((int) win);
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
 
 	v8::Handle<v8::Value> GLUT::handleDestroyWindow(const v8::Arguments& args) {
 
-		if (args.Length() == 1) {
+		v8::HandleScope scope;
+
+		if (
+			args.Length() == 1
+			&& args[0]->IsNumber()
+		) {
 
 			int win = args[0]->IntegerValue();
-
 			glutDestroyWindow((int) win);
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
 
 	v8::Handle<v8::Value> GLUT::handlePostRedisplay(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
+
 		glutPostRedisplay();
-		return v8::Undefined();
+
+		return scope.Close(v8::Undefined());
+
 	}
 
 	v8::Handle<v8::Value> GLUT::handleSwapBuffers(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
+
 		glutSwapBuffers();
-		return v8::Undefined();
+
+		return scope.Close(v8::Undefined());
+
 	}
 
 	v8::Handle<v8::Value> GLUT::handlePositionWindow(const v8::Arguments& args) {
 
-		if (args.Length() == 2) {
+		v8::HandleScope scope;
+
+		if (
+			args.Length() == 2
+			&& args[0]->IsNumber()
+			&& args[1]->IsNumber()
+		) {
 
 			int posx = args[0]->IntegerValue();
 			int posy = args[1]->IntegerValue();
@@ -204,56 +274,94 @@ namespace binding {
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
 
 	v8::Handle<v8::Value> GLUT::handleReshapeWindow(const v8::Arguments& args) {
 
-		if (args.Length() == 2) {
+		v8::HandleScope scope;
 
-			int width = args[0]->IntegerValue();
+		if (
+			args.Length() == 2
+			&& args[0]->IsNumber()
+			&& args[1]->IsNumber()
+		) {
+
+			int width  = args[0]->IntegerValue();
 			int height = args[1]->IntegerValue();
 
 			glutReshapeWindow((int) width, (int) height);
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
 
 	v8::Handle<v8::Value> GLUT::handleFullScreen(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
+
 		glutFullScreen();
-		return v8::Undefined();
+
+		return scope.Close(v8::Undefined());
+
 	}
 
 	v8::Handle<v8::Value> GLUT::handlePopWindow(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
+
 		glutPopWindow();
-		return v8::Undefined();
+
+		return scope.Close(v8::Undefined());
+
 	}
 
 	v8::Handle<v8::Value> GLUT::handlePushWindow(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
+
 		glutPushWindow();
-		return v8::Undefined();
+
+		return scope.Close(v8::Undefined());
+
 	}
 
 	v8::Handle<v8::Value> GLUT::handleShowWindow(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
+
 		glutShowWindow();
-		return v8::Undefined();
+
+		return scope.Close(v8::Undefined());
+
 	}
 
 	v8::Handle<v8::Value> GLUT::handleHideWindow(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
+
 		glutHideWindow();
-		return v8::Undefined();
+
+		return scope.Close(v8::Undefined());
+
 	}
 
 	v8::Handle<v8::Value> GLUT::handleIconifyWindow(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
+
 		glutIconifyWindow();
-		return v8::Undefined();
+
+		return scope.Close(v8::Undefined());
+
 	}
 
 	v8::Handle<v8::Value> GLUT::handleSetWindowTitle(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
 
 		if (args.Length() == 1) {
 
@@ -264,11 +372,13 @@ namespace binding {
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
 
 	v8::Handle<v8::Value> GLUT::handleSetIconTitle(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
 
 		if (args.Length() == 1) {
 
@@ -279,7 +389,7 @@ namespace binding {
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
 
@@ -290,28 +400,53 @@ namespace binding {
 	 */
 
 	v8::Handle<v8::Value> GLUT::handleEstablishOverlay(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
+
 		glutEstablishOverlay();
-		return v8::Undefined();
+
+		return scope.Close(v8::Undefined());
+
 	}
 
 	v8::Handle<v8::Value> GLUT::handleRemoveOverlay(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
+
 		glutRemoveOverlay();
-		return v8::Undefined();
+
+		return scope.Close(v8::Undefined());
+
 	}
 
 	v8::Handle<v8::Value> GLUT::handlePostOverlayRedisplay(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
+
 		glutPostOverlayRedisplay();
-		return v8::Undefined();
+
+		return scope.Close(v8::Undefined());
+
 	}
 
 	v8::Handle<v8::Value> GLUT::handleShowOverlay(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
+
 		glutShowOverlay();
-		return v8::Undefined();
+
+		return scope.Close(v8::Undefined());
+
 	}
 
 	v8::Handle<v8::Value> GLUT::handleHideOverlay(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
+
 		glutHideOverlay();
-		return v8::Undefined();
+
+		return scope.Close(v8::Undefined());
+
 	}
 
 
@@ -335,6 +470,8 @@ namespace binding {
 
 	v8::Handle<v8::Value> GLUT::handleDisplayFunc(const v8::Arguments& args) {
 
+		v8::HandleScope scope;
+
 		if (args.Length() == 1 && args[0]->IsFunction()) {
 
 			_glut_displayFuncCallback.Dispose();
@@ -345,7 +482,7 @@ namespace binding {
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
 
@@ -364,6 +501,8 @@ namespace binding {
 
 	v8::Handle<v8::Value> GLUT::handleOverlayDisplayFunc(const v8::Arguments& args) {
 
+		v8::HandleScope scope;
+
 		if (args.Length() == 1 && args[0]->IsFunction()) {
 
 			_glut_overlayDisplayFuncCallback.Dispose();
@@ -374,7 +513,7 @@ namespace binding {
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
 
@@ -397,6 +536,8 @@ namespace binding {
 
 	v8::Handle<v8::Value> GLUT::handleReshapeFunc(const v8::Arguments& args) {
 
+		v8::HandleScope scope;
+
 		if (args.Length() == 1 && args[0]->IsFunction()) {
 
 			_glut_reshapeFuncCallback.Dispose();
@@ -407,7 +548,7 @@ namespace binding {
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
 
@@ -433,6 +574,8 @@ namespace binding {
 
 	v8::Handle<v8::Value> GLUT::handleKeyboardFunc(const v8::Arguments& args) {
 
+		v8::HandleScope scope;
+
 		if (args.Length() == 1 && args[0]->IsFunction()) {
 
 			_glut_keyboardFuncCallback.Dispose();
@@ -443,7 +586,7 @@ namespace binding {
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
 
@@ -468,6 +611,8 @@ namespace binding {
 
 	v8::Handle<v8::Value> GLUT::handleMouseFunc(const v8::Arguments& args) {
 
+		v8::HandleScope scope;
+
 		if (args.Length() == 1 && args[0]->IsFunction()) {
 
 			_glut_mouseFuncCallback.Dispose();
@@ -478,7 +623,7 @@ namespace binding {
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
 
@@ -501,6 +646,8 @@ namespace binding {
 
 	v8::Handle<v8::Value> GLUT::handleMotionFunc(const v8::Arguments& args) {
 
+		v8::HandleScope scope;
+
 		if (args.Length() == 1 && args[0]->IsFunction()) {
 
 			_glut_motionFuncCallback.Dispose();
@@ -511,7 +658,7 @@ namespace binding {
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
 
@@ -534,6 +681,8 @@ namespace binding {
 
 	v8::Handle<v8::Value> GLUT::handleVisibilityFunc(const v8::Arguments& args) {
 
+		v8::HandleScope scope;
+
 		if (args.Length() == 1 && args[0]->IsFunction()) {
 
 			_glut_visibilityFuncCallback.Dispose();
@@ -544,13 +693,41 @@ namespace binding {
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
  
+	v8::Persistent<v8::Function> _glut_idleFuncCallback;
+
+	void _glut_idleFunc(void) {
+
+		v8::HandleScope scope;
+
+		v8::Handle<v8::Value> args[0];
+
+		v8::Local<v8::Object> callback_scope = _glut_idleFuncCallback->CreationContext()->Global()->Get(v8::String::NewSymbol("glut"))->ToObject();
+		v8::Local<v8::Value> result = _glut_idleFuncCallback->Call(callback_scope, 0, args);
+
+		scope.Close(result);
+
+	}
 
 	v8::Handle<v8::Value> GLUT::handleIdleFunc(const v8::Arguments& args) {
-		return v8::Undefined();
+
+		v8::HandleScope scope;
+
+		if (args.Length() == 1 && args[0]->IsFunction()) {
+
+			_glut_idleFuncCallback.Dispose();
+			v8::Handle<v8::Function> callback = v8::Handle<v8::Function>::Cast(args[0]);
+			_glut_idleFuncCallback = v8::Persistent<v8::Function>::New(callback);
+
+			glutIdleFunc(_glut_idleFunc);
+
+		}
+
+		return scope.Close(v8::Undefined());
+
 	}
 
 
@@ -583,6 +760,7 @@ namespace binding {
 
 			_glut_timerStack[id] = NULL;
 
+			scope.Close(v8::Undefined());
 
 		}
 
@@ -592,7 +770,12 @@ namespace binding {
 
 		v8::HandleScope scope;
 
-		if (args.Length() == 3) {
+		if (
+			args.Length() == 3
+			&& args[0]->IsNumber()
+			&& args[1]->IsFunction()
+			&& args[2]->IsUndefined() == false
+		) {
 
 			unsigned int milliseconds = args[0]->Uint32Value();
 
@@ -647,6 +830,8 @@ namespace binding {
 
 	v8::Handle<v8::Value> GLUT::handleGet(const v8::Arguments& args) {
 
+		v8::HandleScope scope;
+
 		if (args.Length() == 1) {
 
 			int state = args[0]->IntegerValue();
@@ -656,30 +841,38 @@ namespace binding {
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
 
 	v8::Handle<v8::Value> GLUT::handleGetModifiers(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
+
 		int modifiers = glutGetModifiers();
+
 		return v8::Uint32::New(modifiers);
+
 	}
 
 	v8::Handle<v8::Value> GLUT::handleExtensionSupported(const v8::Arguments& args) {
 
-		if (args.Length() == 1) {
+		v8::HandleScope scope;
+
+		if (args.Length() == 1 && args[0]->IsString()) {
 
 			v8::String::Utf8Value raw(args[0]);
 			char* extension = *raw;
 
 			int isSupported = glutExtensionSupported(extension);
 			if (isSupported != 0) {
-				return v8::True();
+				return scope.Close(v8::True());
 			}
 
 		}
 
-		return v8::False();
+
+		return scope.Close(v8::False());
 
 	}
 
@@ -691,7 +884,14 @@ namespace binding {
 
 	v8::Handle<v8::Value> GLUT::handleSolidSphere(const v8::Arguments& args) {
 
-		if (args.Length() == 3) {
+		v8::HandleScope scope;
+
+		if (
+			args.Length() == 3
+			&& args[0]->IsNumber()
+			&& args[1]->IsNumber()
+			&& args[2]->IsNumber()
+		) {
 
 			double radius = args[0]->NumberValue();
 			int slices = args[1]->IntegerValue();
@@ -701,13 +901,20 @@ namespace binding {
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
 
 	v8::Handle<v8::Value> GLUT::handleWireSphere(const v8::Arguments& args) {
 
-		if (args.Length() == 3) {
+		v8::HandleScope scope;
+
+		if (
+			args.Length() == 3
+			&& args[0]->IsNumber()
+			&& args[1]->IsNumber()
+			&& args[2]->IsNumber()
+		) {
 
 			double radius = args[0]->NumberValue();
 			int slices = args[1]->IntegerValue();
@@ -717,13 +924,18 @@ namespace binding {
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
 
 	v8::Handle<v8::Value> GLUT::handleSolidCube(const v8::Arguments& args) {
 
-		if (args.Length() == 1) {
+		v8::HandleScope scope;
+
+		if (
+			args.Length() == 1
+			&& args[0]->IsNumber()
+		) {
 
 			double size = args[0]->NumberValue();
 
@@ -731,13 +943,18 @@ namespace binding {
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
 
 	v8::Handle<v8::Value> GLUT::handleWireCube(const v8::Arguments& args) {
 
-		if (args.Length() == 1) {
+		v8::HandleScope scope;
+
+		if (
+			args.Length() == 1
+			&& args[0]->IsNumber()
+		) {
 
 			double size = args[0]->NumberValue();
 
@@ -745,13 +962,21 @@ namespace binding {
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
 
 	v8::Handle<v8::Value> GLUT::handleSolidCone(const v8::Arguments& args) {
 
-		if (args.Length() == 4) {
+		v8::HandleScope scope;
+
+		if (
+			args.Length() == 4
+			&& args[0]->IsNumber()
+			&& args[1]->IsNumber()
+			&& args[2]->IsNumber()
+			&& args[3]->IsNumber()
+		) {
 
 			double base = args[0]->NumberValue();
 			double height = args[1]->NumberValue();
@@ -762,13 +987,21 @@ namespace binding {
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
  
 	v8::Handle<v8::Value> GLUT::handleWireCone(const v8::Arguments& args) {
 
-		if (args.Length() == 4) {
+		v8::HandleScope scope;
+
+		if (
+			args.Length() == 4
+			&& args[0]->IsNumber()
+			&& args[1]->IsNumber()
+			&& args[2]->IsNumber()
+			&& args[3]->IsNumber()
+		) {
 
 			double base = args[0]->NumberValue();
 			double height = args[1]->NumberValue();
@@ -779,13 +1012,21 @@ namespace binding {
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
 
 	v8::Handle<v8::Value> GLUT::handleSolidTorus(const v8::Arguments& args) {
 
-		if (args.Length() == 4) {
+		v8::HandleScope scope;
+
+		if (
+			args.Length() == 4
+			&& args[0]->IsNumber()
+			&& args[1]->IsNumber()
+			&& args[2]->IsNumber()
+			&& args[3]->IsNumber()
+		) {
 
 			double innerRadius = args[0]->NumberValue();
 			double outerRadius = args[1]->NumberValue();
@@ -796,13 +1037,21 @@ namespace binding {
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
 
 	v8::Handle<v8::Value> GLUT::handleWireTorus(const v8::Arguments& args) {
 
-		if (args.Length() == 4) {
+		v8::HandleScope scope;
+
+		if (
+			args.Length() == 4
+			&& args[0]->IsNumber()
+			&& args[1]->IsNumber()
+			&& args[2]->IsNumber()
+			&& args[3]->IsNumber()
+		) {
 
 			double innerRadius = args[0]->NumberValue();
 			double outerRadius = args[1]->NumberValue();
@@ -813,68 +1062,119 @@ namespace binding {
 
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 
 	}
 
 	v8::Handle<v8::Value> GLUT::handleSolidDodecahedron(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
+
 		glutSolidDodecahedron();
-		return v8::Undefined();
+
+		return scope.Close(v8::Undefined());
+
 	}
 
 	v8::Handle<v8::Value> GLUT::handleWireDodecahedron(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
+
 		glutWireDodecahedron();
-		return v8::Undefined();
+
+		return scope.Close(v8::Undefined());
+
 	}
 
 	v8::Handle<v8::Value> GLUT::handleSolidTetrahedron(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
+
 		glutSolidTetrahedron();
-		return v8::Undefined();
+
+		return scope.Close(v8::Undefined());
+
 	}
 
 	v8::Handle<v8::Value> GLUT::handleWireTetrahedron(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
+
 		glutWireTetrahedron();
-		return v8::Undefined();
+
+		return scope.Close(v8::Undefined());
+
 	}
 
 	v8::Handle<v8::Value> GLUT::handleSolidOctahedron(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
+
 		glutSolidOctahedron();
-		return v8::Undefined();
+
+		return scope.Close(v8::Undefined());
+
 	}
 
 	v8::Handle<v8::Value> GLUT::handleWireOctahedron(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
+
 		glutWireOctahedron();
-		return v8::Undefined();
+
+		return scope.Close(v8::Undefined());
+
 	}
 
 	v8::Handle<v8::Value> GLUT::handleSolidIcosahedron(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
+
 		glutSolidIcosahedron();
-		return v8::Undefined();
+
+		return scope.Close(v8::Undefined());
+
 	}
 
 	v8::Handle<v8::Value> GLUT::handleWireIcosahedron(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
+
 		glutWireIcosahedron();
-		return v8::Undefined();
+
+		return scope.Close(v8::Undefined());
+
 	}
 
 	v8::Handle<v8::Value> GLUT::handleSolidTeapot(const v8::Arguments& args) {
 
-		if (args.Length() == 1) {
+		v8::HandleScope scope;
+
+		if (
+			args.Length() == 1
+			&& args[0]->IsNumber()
+		) {
 			double size = args[0]->NumberValue();
 			glutSolidTeapot((GLdouble) size);
 		}
  
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
+
 	}
 
 	v8::Handle<v8::Value> GLUT::handleWireTeapot(const v8::Arguments& args) {
 
-		if (args.Length() == 1) {
+		v8::HandleScope scope;
+
+		if (
+			args.Length() == 1
+			&& args[0]->IsNumber()
+		) {
 			double size = args[0]->NumberValue();
 			glutWireTeapot((GLdouble) size);
 		}
 
-		return v8::Undefined();
+		return scope.Close(v8::Undefined());
 	}
 
 
@@ -887,7 +1187,12 @@ namespace binding {
 
 	v8::Handle<v8::Value> GLUT::handleCreateWindow(const v8::Arguments& args) {
 
-		if (args.Length() == 1) {
+		v8::HandleScope scope;
+
+		if (
+			args.Length() == 1
+			&& args[0]->IsString()
+		) {
 
 			v8::String::Utf8Value raw(args[0]);
 			char* name = *raw;
@@ -921,19 +1226,16 @@ namespace binding {
 			}
 
 
-			return v8::Uint32::New(win);
+			return scope.Close(v8::Uint32::New(win));
 
 		}
 
-		return v8::Undefined();
+
+		return scope.Close(v8::Uint32::New(0));
 
 	}
 
-	v8::Handle<v8::ObjectTemplate> GLUT::generate(int* pargc, char** argv) {
-
-		_glut_pargc = pargc;
-		_glut_argv = argv;
-
+	v8::Handle<v8::ObjectTemplate> GLUT::generate() {
 
 		v8::HandleScope scope;
 

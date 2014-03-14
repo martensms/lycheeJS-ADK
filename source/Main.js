@@ -34,6 +34,7 @@ this.adk = {
 		}
 
 	})([
+		'Builder.js',
 		'Help.js',
 		'adapter/lycheeJS.js',
 		'template/Android.js',
@@ -42,62 +43,81 @@ this.adk = {
 	]);
 
 
-	adk.Main = function(argc, argv, debug) {
-
-		debug = debug === true;
-
+	adk.Main = function(argc, argv) {
 
 		var settings = this.__parseArguments(argc, argv);
 
 
-		// defaulted game engine adapter
-		if (settings.flags.adapter === null) {
-			settings.flags.adapter = 'lycheeJS';
+		this.__self     = argv[0];
+		this.__root     = shell.exec('cd "$(dirname "' + this.__self + '")"; pwd;');
+		this.__builder  = new adk.Builder(this);
+		this.__help     = new adk.Help(this);
+		this.__adapter  = null;
+		this.__template = null;
+
+
+		if (adk.adapter[settings.flags.adapter] !== undefined) {
+			this.__adapter = new adk.adapter[settings.flags.adapter](this);
+		} else {
+			this.__adapter = new adk.adapter.lycheeJS(this);
 		}
 
-		if (settings.template === null) {
-			console.error('Unsupported <template>!');
+
+		// Dispatch shell log
+		shell.log = this.getRoot() + '/log';
+
+
+		if (settings.task === null) {
+			this.__help.generate();
 			return this;
 		}
 
-		if (settings.indir === null) {
-			console.error('Unsupported <game-folder>!');
-			return this;
-		}
 
-		if (settings.arch === null) {
+		if (settings.task !== 'bootstrap') {
 
-			settings.arch = this.__getArch();
-
-			if (settings.arch === null) {
-				console.error('Unsupported <architecture>!');
+			if (settings.template !== null) {
+				this.__template = new adk.template[settings.template](this);
+			} else {
+				console.error('Invalid <template>!');
 				return this;
-			} else if (debug === true) {
-				console.warn('Using host <architecture> (' + settings.arch + ')');
+			}
+
+			if (settings.indir === null && settings.task !== 'debug') {
+				console.error('Invalid <game-folder>!');
+				return this;
 			}
 
 		}
 
 
-		this.__adapter  = new adk.adapter[settings.flags.adapter](this);
-		this.__debug    = debug;
-		this.__help     = new adk.Help(this);
-		this.__self     = argv[0];
-		this.__settings = settings;
-		this.__template = new adk.template[settings.template](this);
+		if (settings.arch === null) {
 
+			settings.arch = this.getHostArch();
 
+			if (settings.arch === null) {
+				console.error('Unsupported <architecture>!');
+				return this;
+			} else {
+				console.warn('Using host <architecture> (' + settings.arch + ')');
+			}
 
-		if (settings.outdir === null) {
-			settings.outdir = './out/' + settings.template + settings.arch;
 		}
 
+		if (settings.outdir === null) {
+			settings.outdir = './out/' + settings.template + '.' + settings.arch;
+		}
+
+		settings.tmpdir = './.temp';
+
+
+		this.__settings = settings;
 
 		switch(settings.task) {
 
-			case "build": this.build(); break;
-			case "clean": this.clean(); break;
-			case "debug": this.debug(); break;
+			case "bootstrap": this.bootstrap(); break;
+			case "build":     this.build(); break;
+			case "clean":     this.clean(); break;
+			case "debug":     this.debug(); break;
 
 			default:
 				this.__help.generate();
@@ -109,9 +129,10 @@ this.adk = {
 
 
 	adk.Main.TASKS = {
-		build: 'Starts the build process, output depends on the <template>.',
-		clean: 'Cleans up temporary files.',
-		debug: 'Starts the debugger for the built (and installed) app, depends on the <template>.'
+		bootstrap: 'Bootstraps the ADK with externally required files, depends on the adapter.',
+		build:     'Starts the build process, output depends on the <template>.',
+		clean:     'Cleans up temporary files.',
+		debug:     'Starts the debugger for the built (and installed) app, depends on the <template>.'
 	};
 
 
@@ -128,7 +149,19 @@ this.adk = {
 		 * PRIVATE API
 		 */
 
-		__getArch: function() {
+		getBuildTarget: function(arch) {
+
+			if (this.__settings.task === 'debug') {
+// TODO: Enable this after all Makefiles are supporting debug symbol variants
+//				return arch + '.debug';
+				return arch + '.release';
+			} else {
+				return arch + '.release';
+			}
+
+		},
+
+		getHostArch: function() {
 
 			var arch   = null;
 			var unamep = shell.exec("uname -p");
@@ -217,11 +250,13 @@ this.adk = {
 
 						if (tmp[0] === 'adapter' && adk.adapter[tmp[1]] !== undefined) {
 							data.flags[tmp[0]] = tmp[1];
+						} else {
+							data.flags[tmp[0]] = tmp[1];
 						}
 
 					}
 
-				} else if (this.__debug === true) {
+				} else {
 
 					console.warn('Could not interpret argument "' + str + '"');
 
@@ -240,6 +275,14 @@ this.adk = {
 		 * PUBLIC API
 		 */
 
+		getBuilder: function() {
+			return this.__builder;
+		},
+
+		getRoot: function() {
+			return this.__root;
+		},
+
 		getSelf: function() {
 			return this.__self;
 		},
@@ -248,34 +291,82 @@ this.adk = {
 			return this.__settings;
 		},
 
+		getTemplate: function() {
+			return this.__template;
+		},
+
+		getTemporaryFolder: function() {
+
+			if (shell.isDirectory(this.__settings.tmpdir) === false) {
+				shell.createDirectory(this.__settings.tmpdir);
+			}
+
+			return this.__settings.tmpdir;
+
+		},
+
+
+
+		/*
+		 * Tasks
+		 */
+
+		bootstrap: function() {
+
+			if (this.__adapter !== null) {
+				this.__adapter.bootstrap();
+			}
+
+		},
+
 		build: function() {
 
 			var indir  = this.__settings.indir;
 			var outdir = this.__settings.outdir;
+			var arch   = this.__settings.arch;
 
 
-			var source = null;
+			var env = null;
 			if (this.__adapter !== null) {
-				source = this.__adapter.getTree(indir);
+				env = this.__adapter.getEnvironment(arch, indir, outdir);
+			} else {
+				console.warn('No valid <adapter> selected!');
 			}
 
-/*
-			var target = null;
 			if (this.__template !== null) {
-				target = this.__template.getTree();
+				env = this.__template.getEnvironment(env, indir, outdir);
+			} else {
+				console.warn('No valid <template> selected!');
 			}
-*/
 
-			/*
-			 * Required Steps:
-			 *
-			 * 1. adapter:  Create main.js for parsing.
-			 * 2. adapter:  Parse the environment
-			 * 3. adapter:  Create tree for file system hierarchy
-			 * 4. template: Parse the tree, dependend on outdir (e.g. move all contents of ./external/lycheeJS/ to ./lychee)
-			 * 5. template: Create a main.js for the outdir (only on V8GL build, so it's the template) and attach it to the tree
-			 * 6. Copy all necessary files from the tree to the outdir
-			 */
+
+			if (env !== null) {
+
+				// Cleanup old builds
+				if (shell.isDirectory(outdir) === true) {
+					shell.removeDirectory(outdir);
+				}
+
+				shell.createDirectory(outdir, true);
+
+
+				for (var f = 0, fl = env.folders.length; f < fl; f++) {
+					shell.copyDirectory(env.folders[f][0], outdir + '/' + env.folders[f][1]);
+				}
+
+				for (var f = 0, fl = env.files.length; f < fl; f++) {
+					shell.copyFile(env.files[f][0], outdir + '/' + env.files[f][1]);
+				}
+
+			} else {
+				console.error('Could not determine game environment.');
+				return;
+			}
+
+
+			if (this.__template !== null) {
+				this.__template.build(arch, indir, outdir);
+			}
 
 		},
 
@@ -284,6 +375,14 @@ this.adk = {
 		},
 
 		debug: function() {
+
+			var indir  = this.__settings.indir;
+			var outdir = this.__settings.outdir;
+			var arch   = this.__settings.arch;
+
+			if (this.__template !== null) {
+				this.__template.debug(arch, indir, outdir);
+			}
 
 		}
 

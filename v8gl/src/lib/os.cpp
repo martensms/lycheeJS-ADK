@@ -17,6 +17,7 @@ namespace lib {
 		v8::Handle<v8::ObjectTemplate> tpl = v8::ObjectTemplate::New();
 
 		tpl->Set(v8::String::NewSymbol("log"),   v8::FunctionTemplate::New(OS::handleLog),   v8::ReadOnly);
+		tpl->Set(v8::String::NewSymbol("info"),  v8::FunctionTemplate::New(OS::handleInfo),  v8::ReadOnly);
 		tpl->Set(v8::String::NewSymbol("warn"),  v8::FunctionTemplate::New(OS::handleWarn),  v8::ReadOnly);
 		tpl->Set(v8::String::NewSymbol("error"), v8::FunctionTemplate::New(OS::handleError), v8::ReadOnly);
 		tpl->Set(v8::String::NewSymbol("exec"),  v8::FunctionTemplate::New(OS::handleExec),  v8::ReadOnly);
@@ -32,6 +33,19 @@ namespace lib {
 		if (args.Length() == 1) {
 			v8::String::Utf8Value message(args[0]->ToString());
 			OS::log(*message);
+		}
+
+		return scope.Close(v8::Undefined());
+
+	}
+
+	v8::Handle<v8::Value> OS::handleInfo(const v8::Arguments& args) {
+
+		v8::HandleScope scope;
+
+		if (args.Length() == 1) {
+			v8::String::Utf8Value message(args[0]->ToString());
+			OS::info(*message);
 		}
 
 		return scope.Close(v8::Undefined());
@@ -103,9 +117,19 @@ namespace lib {
 	void OS::log(char* message) {
 
 #ifdef __ANDROID__
-		__android_log_write(ANDROID_LOG_INFO, "ms.martens.v8gl", message);
+		__android_log_write(ANDROID_LOG_VERBOSE, "ms.martens.v8gl", message);
 #else
 		fprintf(stdout, "%s\n", message);
+#endif
+
+	}
+
+	void OS::info(char* message) {
+
+#ifdef __ANDROID__
+		__android_log_write(ANDROID_LOG_INFO, "ms.martens.v8gl", message);
+#else
+		fprintf(stdout, "(i) %s\n", message);
 #endif
 
 	}

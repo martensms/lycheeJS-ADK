@@ -13,13 +13,29 @@
 
 	adk.template.Android.prototype = {
 
-		build: function() {
+		getEnvironment: function(env, indir, outdir) {
+			// Don't modify the paths, keep them as the Adapter requested it
+			return env;
 		},
 
-		clean: function() {
+		build: function(arch, indir, outdir) {
+
+			console.group('adk.template.Android.prototype.build(' + arch + ', ' + indir + ', ' + outdir + ')');
+
+			var builder = this.__main.getBuilder();
+
+			builder.buildPNG(arch, outdir + '/lib/libpng.a', true);
+			builder.buildV8(arch, outdir + '/lib/libv8_*.a', true);
+			builder.buildV8GL(arch, outdir + '/lib/libv8gl.a', true);
+
+			console.groupEnd();
+
 		},
 
-		debug: function() {
+		clean: function(arch, indir, outdir) {
+		},
+
+		debug: function(arch, indir, outdir) {
 		}
 
 	};

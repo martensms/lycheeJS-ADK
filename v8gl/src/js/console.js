@@ -57,6 +57,23 @@
 
 	};
 
+	var info = function() {
+
+		var message = '';
+		for (var m = 0; m < _margin; m++) {
+			message += '\t';
+		}
+
+		for (var a = 0, l = arguments.length; a < l; a++) {
+			message += _toString(arguments[a]);
+			if (l > a + 1) message += ' | ';
+		}
+
+
+		global.os.info(message);
+
+	};
+
 	var warn = function() {
 
 		var message = '';
@@ -127,7 +144,7 @@
 		assert: assert,
 		clear: _stub,
 		debug: log,
-		info: log,
+		info: info,
 		log: log,
 		warn: warn,
 		error: error,
@@ -136,4 +153,5 @@
 	};
 
 })(this);
+
 

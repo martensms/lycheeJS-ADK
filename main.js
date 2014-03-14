@@ -29,9 +29,7 @@
 		include('./source/bootstrap.js');
 
 		include('./source/Main.js', function() {
-
-			new adk.Main(argc, argv, true);
-
+			new adk.Main(argc, argv);
 		}, this);
 
 	};

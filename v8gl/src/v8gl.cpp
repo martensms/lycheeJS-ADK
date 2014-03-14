@@ -36,7 +36,7 @@
 
 namespace v8gl {
 
-	v8::Persistent<v8::Context> V8GL::initialize(int argc, char** argv) {
+	v8::Persistent<v8::Context> V8GL::initialize(int argc, char* argv[]) {
 
 		v8::Local<v8::ObjectTemplate> global = v8::ObjectTemplate::New();
 
@@ -55,7 +55,7 @@ namespace v8gl {
 		// GL/GLU/GLUT Bindings
 		global->Set(v8::String::New("gl"),   binding::GL::generate());
 		global->Set(v8::String::New("glu"),  binding::GLU::generate());
-		global->Set(v8::String::New("glut"), binding::GLUT::generate(&argc, argv));
+		global->Set(v8::String::New("glut"), binding::GLUT::generate());
 
 #endif
 

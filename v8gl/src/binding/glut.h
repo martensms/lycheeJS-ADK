@@ -11,8 +11,8 @@ namespace binding {
 
 		private:
 
-			static v8::Handle<v8::Value> handleMainLoop(const v8::Arguments& args);
 			static v8::Handle<v8::Value> handleInit(const v8::Arguments& args);
+			static v8::Handle<v8::Value> handleMainLoop(const v8::Arguments& args);
 			static v8::Handle<v8::Value> handleInitWindowPosition(const v8::Arguments& args);
 			static v8::Handle<v8::Value> handleInitWindowSize(const v8::Arguments& args);
 			static v8::Handle<v8::Value> handleInitDisplayMode(const v8::Arguments& args);
@@ -77,7 +77,7 @@ namespace binding {
 
 		public:
 
-			static v8::Handle<v8::ObjectTemplate> generate(int* pargc, char** argv);
+			static v8::Handle<v8::ObjectTemplate> generate();
 
 	};
 
